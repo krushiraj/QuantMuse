@@ -11,12 +11,17 @@ from sqlalchemy import (
     Column, Integer, String, Float, DateTime, Text, ForeignKey,
     create_engine, Index
 )
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from sqlalchemy.sql import func
 
 logger = logging.getLogger(__name__)
 
 Base = declarative_base()
+
+# Default database engine and session factory
+DATABASE_URL = "sqlite:///paper_trading.db"
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 class PaperSession(Base):
