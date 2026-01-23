@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routers import sessions, positions, trades, signals
+from api.routers import sessions, positions, trades, signals, performance
 
 app = FastAPI(
     title="Paper Trading API",
@@ -24,6 +24,7 @@ app.include_router(sessions.router)
 app.include_router(positions.router)
 app.include_router(trades.router)
 app.include_router(signals.router)
+app.include_router(performance.router)
 
 
 @app.get("/health")
