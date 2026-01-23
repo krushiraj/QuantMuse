@@ -9,4 +9,9 @@ try:
 except ImportError:
     AlphaVantageFetcher = None
 
-__all__ = ['BinanceFetcher', 'AlphaVantageFetcher'] 
+try:
+    from .nse_fetcher import NSEFetcher
+except ImportError:
+    NSEFetcher = None
+
+__all__ = ['BinanceFetcher', 'AlphaVantageFetcher', 'NSEFetcher'] 
