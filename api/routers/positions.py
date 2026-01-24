@@ -103,9 +103,9 @@ def close_position(
     close_price = close_data.close_price or position.current_price
 
     # Calculate P&L
-    if position.direction == "long":
+    if position.direction in ("long", "BUY"):
         pnl = (close_price - position.entry_price) * position.quantity
-    else:
+    else:  # short or SELL
         pnl = (position.entry_price - close_price) * position.quantity
 
     # Update position

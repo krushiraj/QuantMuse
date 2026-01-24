@@ -151,9 +151,9 @@ class PaperExecutor:
         session = self.db.query(PaperSession).filter_by(id=position.session_id).first()
 
         # Calculate P&L
-        if position.direction == "long":
+        if position.direction in ("long", "BUY"):
             gross_pnl = (exit_price - position.entry_price) * position.quantity
-        else:
+        else:  # short or SELL
             gross_pnl = (position.entry_price - exit_price) * position.quantity
 
         # Calculate trade value and commission
@@ -223,9 +223,9 @@ class PaperExecutor:
         remaining_quantity = position.quantity - close_quantity
 
         # Calculate P&L for closed portion
-        if position.direction == "long":
+        if position.direction in ("long", "BUY"):
             gross_pnl = (exit_price - position.entry_price) * close_quantity
-        else:
+        else:  # short or SELL
             gross_pnl = (position.entry_price - exit_price) * close_quantity
 
         trade_value = exit_price * close_quantity
@@ -295,10 +295,10 @@ class PaperExecutor:
         position.current_price = current_price
 
         # Update trailing stop high if applicable
-        if position.direction == "long":
+        if position.direction in ("long", "BUY"):
             if position.trailing_stop_high is None or current_price > position.trailing_stop_high:
                 position.trailing_stop_high = current_price
-        else:
+        else:  # short or SELL
             if position.trailing_stop_high is None or current_price < position.trailing_stop_high:
                 position.trailing_stop_high = current_price
 

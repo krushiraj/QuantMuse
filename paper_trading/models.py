@@ -85,9 +85,9 @@ class PaperPosition(Base):
     @property
     def unrealized_pnl(self) -> float:
         """Calculate unrealized P&L"""
-        if self.direction == "long":
+        if self.direction in ("long", "BUY"):
             return (self.current_price - self.entry_price) * self.quantity
-        else:  # short
+        else:  # short or SELL
             return (self.entry_price - self.current_price) * self.quantity
 
     @property
@@ -95,9 +95,9 @@ class PaperPosition(Base):
         """Calculate unrealized P&L percentage"""
         if self.entry_price == 0:
             return 0.0
-        if self.direction == "long":
+        if self.direction in ("long", "BUY"):
             return ((self.current_price - self.entry_price) / self.entry_price) * 100
-        else:  # short
+        else:  # short or SELL
             return ((self.entry_price - self.current_price) / self.entry_price) * 100
 
     @property

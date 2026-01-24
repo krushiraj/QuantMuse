@@ -58,10 +58,10 @@ class ConfidenceMonitor:
         new_sl_distance = original_sl_distance * tier.sl_factor
         new_tp_distance = original_tp_distance * tier.tp_factor
 
-        if position.direction == "long":
+        if position.direction in ("long", "BUY"):
             new_stop_loss = position.entry_price - new_sl_distance
             new_take_profit = position.entry_price + new_tp_distance
-        else:
+        else:  # short or SELL
             new_stop_loss = position.entry_price + new_sl_distance
             new_take_profit = position.entry_price - new_tp_distance
 

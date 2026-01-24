@@ -64,21 +64,21 @@ class ExitManager:
             return None
 
         # Calculate P&L percentage
-        if direction == "long":
+        if direction in ("long", "BUY"):
             pnl_pct = ((current_price - entry_price) / entry_price) * 100
-        else:
+        else:  # short or SELL
             pnl_pct = ((entry_price - current_price) / entry_price) * 100
 
         # Check trailing stop first (it's usually tighter than hard SL when active)
         if trailing_stop is not None:
-            if direction == "long" and current_price <= trailing_stop:
+            if direction in ("long", "BUY") and current_price <= trailing_stop:
                 return ExitSignal(
                     should_exit=True,
                     reason="trailing_stop",
                     exit_price=current_price,
                     pnl_pct=pnl_pct,
                 )
-            elif direction == "short" and current_price >= trailing_stop:
+            elif direction in ("short", "SELL") and current_price >= trailing_stop:
                 return ExitSignal(
                     should_exit=True,
                     reason="trailing_stop",
@@ -88,14 +88,14 @@ class ExitManager:
 
         # Check hard stop-loss
         if stop_loss is not None:
-            if direction == "long" and current_price <= stop_loss:
+            if direction in ("long", "BUY") and current_price <= stop_loss:
                 return ExitSignal(
                     should_exit=True,
                     reason="stop_loss",
                     exit_price=current_price,
                     pnl_pct=pnl_pct,
                 )
-            elif direction == "short" and current_price >= stop_loss:
+            elif direction in ("short", "SELL") and current_price >= stop_loss:
                 return ExitSignal(
                     should_exit=True,
                     reason="stop_loss",
@@ -105,14 +105,14 @@ class ExitManager:
 
         # Check take-profit
         if take_profit is not None:
-            if direction == "long" and current_price >= take_profit:
+            if direction in ("long", "BUY") and current_price >= take_profit:
                 return ExitSignal(
                     should_exit=True,
                     reason="take_profit",
                     exit_price=current_price,
                     pnl_pct=pnl_pct,
                 )
-            elif direction == "short" and current_price <= take_profit:
+            elif direction in ("short", "SELL") and current_price <= take_profit:
                 return ExitSignal(
                     should_exit=True,
                     reason="take_profit",
@@ -142,14 +142,14 @@ class ExitManager:
         trail_distance_pct = self.exits.trailing_stop_distance_pct
 
         # Calculate current profit percentage
-        if direction == "long":
+        if direction in ("long", "BUY"):
             profit_pct = ((current_price - entry_price) / entry_price) * 100
-        else:
+        else:  # short or SELL
             profit_pct = ((entry_price - current_price) / entry_price) * 100
 
         # Check if trailing stop should be activated
         if profit_pct >= activation_pct:
-            if direction == "long":
+            if direction in ("long", "BUY"):
                 # Update high water mark
                 new_high = max(trailing_stop_high, current_price)
                 # Calculate new trailing stop
