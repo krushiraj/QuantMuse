@@ -54,18 +54,27 @@ class ExitConfig:
 
 
 @dataclass
+class ConfidenceTier:
+    """Confidence tier configuration."""
+    min_confidence: float
+    sl_factor: float  # Multiplier for stop loss distance (1.0 = original)
+    tp_factor: float  # Multiplier for take profit distance
+    action: str  # hold, tighten, partial_close, close
+
+
+@dataclass
 class ConfidenceConfig:
     """Confidence-based position management"""
     enable_dynamic_management: bool = True
     recalc_interval_minutes: int = 15
     partial_close_pct: float = 50.0
     min_hold_time_minutes: int = 30
-    # Tiers: (min_confidence, sl_factor, tp_factor, action)
-    tiers: List[tuple] = field(default_factory=lambda: [
-        (0.80, 1.0, 1.0, "hold"),
-        (0.60, 0.8, 0.7, "tighten"),
-        (0.40, 0.6, 0.5, "partial_close"),
-        (0.00, 0.0, 0.0, "close"),
+    # Tiers ordered by min_confidence (highest first)
+    tiers: List[ConfidenceTier] = field(default_factory=lambda: [
+        ConfidenceTier(min_confidence=0.80, sl_factor=1.0, tp_factor=1.0, action="hold"),
+        ConfidenceTier(min_confidence=0.60, sl_factor=0.8, tp_factor=0.7, action="tighten"),
+        ConfidenceTier(min_confidence=0.40, sl_factor=0.6, tp_factor=0.5, action="partial_close"),
+        ConfidenceTier(min_confidence=0.00, sl_factor=0.0, tp_factor=0.0, action="close"),
     ])
 
 
