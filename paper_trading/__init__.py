@@ -36,6 +36,18 @@ try:
 except ImportError:
     PaperTradingEngine = None
 
+try:
+    from .signal_generator import SignalGenerator, TradingSignal, SignalType
+except ImportError:
+    SignalGenerator = None
+    TradingSignal = None
+    SignalType = None
+
+try:
+    from .strategy_runner import StrategyRunner
+except ImportError:
+    StrategyRunner = None
+
 __version__ = "0.1.0"
 
 __all__ = [
@@ -47,4 +59,8 @@ __all__ = [
     "ExitManager",
     "PaperExecutor",
     "PaperTradingEngine",
+    "SignalGenerator",
+    "TradingSignal",
+    "SignalType",
+    "StrategyRunner",
 ]
