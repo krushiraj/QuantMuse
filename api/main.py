@@ -2,7 +2,7 @@
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routers import sessions, positions, trades, signals, performance, markets
+from api.routers import sessions, positions, trades, signals, performance, markets, alerts
 from api.websocket import websocket_endpoint
 
 app = FastAPI(
@@ -27,6 +27,7 @@ app.include_router(trades.router)
 app.include_router(signals.router)
 app.include_router(performance.router)
 app.include_router(markets.router)
+app.include_router(alerts.router)
 
 
 @app.get("/health")
