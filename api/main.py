@@ -1,8 +1,9 @@
 """FastAPI application for paper trading dashboard."""
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.routers import sessions, positions, trades, signals, performance, markets
+from api.websocket import websocket_endpoint
 
 app = FastAPI(
     title="Paper Trading API",
@@ -32,3 +33,9 @@ app.include_router(markets.router)
 def health_check():
     """Health check endpoint."""
     return {"status": "healthy"}
+
+
+@app.websocket("/api/ws")
+async def ws_endpoint(websocket: WebSocket):
+    """WebSocket endpoint for real-time updates."""
+    await websocket_endpoint(websocket)
