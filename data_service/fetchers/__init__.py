@@ -14,4 +14,11 @@ try:
 except ImportError:
     NSEFetcher = None
 
-__all__ = ['BinanceFetcher', 'AlphaVantageFetcher', 'NSEFetcher'] 
+try:
+    from .binance_websocket import BinanceWebSocket, PriceFeed, WEBSOCKETS_AVAILABLE
+except ImportError:
+    BinanceWebSocket = None
+    PriceFeed = None
+    WEBSOCKETS_AVAILABLE = False
+
+__all__ = ['BinanceFetcher', 'AlphaVantageFetcher', 'NSEFetcher', 'BinanceWebSocket', 'PriceFeed', 'WEBSOCKETS_AVAILABLE'] 
