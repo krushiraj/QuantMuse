@@ -39,7 +39,8 @@ class PositionManager:
         entry_price: float,
         stop_loss: float,
         volatility_factor: float = 1.0,
-    ) -> int:
+        market: str = "nse",
+    ) -> float:
         """
         Calculate position size based on risk per trade.
 
@@ -50,9 +51,10 @@ class PositionManager:
             entry_price: Entry price for the trade
             stop_loss: Stop loss price
             volatility_factor: Volatility adjustment factor (>1 = reduce size)
+            market: Market type ("nse" or "crypto") - crypto allows fractional quantities
 
         Returns:
-            Number of shares/units to buy (integer)
+            Number of shares/units to buy (integer for stocks, float for crypto)
         """
         if entry_price <= 0 or stop_loss <= 0:
             self.logger.error("Invalid entry or stop loss price")
@@ -89,8 +91,12 @@ class PositionManager:
             else:
                 shares = 0
 
-        # Round down to integer
-        return int(shares)
+        # For crypto, allow fractional quantities (round to 6 decimal places)
+        # For stocks, round down to integer
+        if market == "crypto":
+            return round(shares, 6)
+        else:
+            return int(shares)
 
     def calculate_volatility_factor(self, atr_pct: float) -> float:
         """

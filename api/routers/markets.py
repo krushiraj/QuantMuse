@@ -1,11 +1,13 @@
 """Markets router for market data and prices."""
 from typing import List, Optional
 from datetime import datetime
+import logging
 from fastapi import APIRouter, Query
 
 from api.schemas import MarketPrice, MarketStatus
 
 router = APIRouter(prefix="/api/markets", tags=["markets"])
+logger = logging.getLogger(__name__)
 
 # Default watchlists
 DEFAULT_NSE_WATCHLIST = [
@@ -17,6 +19,26 @@ DEFAULT_NSE_WATCHLIST = [
 DEFAULT_CRYPTO_WATCHLIST = [
     "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT"
 ]
+
+# Crypto symbol suffixes
+CRYPTO_SUFFIXES = ("USDT", "BUSD", "BTC", "ETH", "BNB")
+
+
+def is_crypto_symbol(symbol: str) -> bool:
+    """Check if a symbol is a crypto trading pair."""
+    return any(symbol.upper().endswith(suffix) for suffix in CRYPTO_SUFFIXES)
+
+
+def get_crypto_price(symbol: str) -> float:
+    """Get current price for a crypto symbol using Binance API."""
+    try:
+        from binance.client import Client
+        client = Client(tld='us')
+        ticker = client.get_symbol_ticker(symbol=symbol.upper())
+        return float(ticker['price'])
+    except Exception as e:
+        logger.warning(f"Failed to get crypto price for {symbol}: {e}")
+        return 0.0
 
 
 @router.get("/status")
@@ -56,15 +78,19 @@ def get_prices(
     prices = []
     for symbol in symbol_list:
         try:
-            price = nse_fetcher.get_current_price(symbol)
+            if is_crypto_symbol(symbol):
+                price = get_crypto_price(symbol)
+            else:
+                price = nse_fetcher.get_current_price(symbol)
+
             prices.append(MarketPrice(
                 symbol=symbol,
                 price=price,
                 change_pct=0.0,  # Placeholder
                 timestamp=datetime.now()
             ))
-        except Exception:
-            # Skip symbols that fail
+        except Exception as e:
+            logger.warning(f"Failed to get price for {symbol}: {e}")
             continue
 
     return prices
@@ -84,11 +110,15 @@ def get_quote(symbol: str):
     """Get detailed quote for a symbol."""
     from data_service.fetchers.nse_fetcher import NSEFetcher
 
-    nse_fetcher = NSEFetcher()
-
     try:
-        price = nse_fetcher.get_current_price(symbol)
-        atr = nse_fetcher.calculate_atr(symbol)
+        if is_crypto_symbol(symbol):
+            price = get_crypto_price(symbol)
+            # For crypto, approximate ATR using recent volatility
+            atr = price * 0.02  # Estimate 2% ATR for crypto
+        else:
+            nse_fetcher = NSEFetcher()
+            price = nse_fetcher.get_current_price(symbol)
+            atr = nse_fetcher.calculate_atr(symbol)
 
         return {
             "symbol": symbol,

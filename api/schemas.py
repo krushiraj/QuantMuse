@@ -57,7 +57,7 @@ class PositionResponse(BaseModel):
     symbol: str
     market: str
     direction: str
-    quantity: int
+    quantity: float  # Float to support fractional crypto quantities
     entry_price: float
     current_price: float
     stop_loss: float
@@ -88,7 +88,7 @@ class TradeResponse(BaseModel):
     position_id: Optional[int]
     symbol: str
     trade_type: str
-    quantity: int
+    quantity: float  # Float to support fractional crypto quantities
     price: float
     value: float
     commission: float

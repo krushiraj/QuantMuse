@@ -92,18 +92,26 @@ curl -X POST http://localhost:8000/api/sessions \
 ### 4. Create a Signal
 
 ```bash
-curl -X POST http://localhost:8000/api/signals \
+curl -X POST "http://localhost:8000/api/signals?session_id=1" \
   -H "Content-Type: application/json" \
   -d '{
-    "session_id": 1,
     "symbol": "BTCUSDT",
     "market": "crypto",
-    "signal_type": "buy",
+    "signal_type": "BUY",
     "entry_price": 42000,
     "stop_loss": 40000,
     "take_profit": 48000,
-    "confidence": 0.85
+    "confidence": 0.85,
+    "strategy": "ManualEntry"
   }'
+```
+
+### 5. Approve the Signal (creates position)
+
+```bash
+curl -X POST "http://localhost:8000/api/signals/1/action" \
+  -H "Content-Type: application/json" \
+  -d '{"action": "approve"}'
 ```
 
 ## Installation
@@ -213,7 +221,8 @@ crypto_config = MarketConfig(
 | `/api/sessions` | GET | List all sessions |
 | `/api/sessions` | POST | Create new session |
 | `/api/sessions/{id}` | GET | Get session details |
-| `/api/sessions/{id}/portfolio` | GET | Get portfolio summary |
+| `/api/sessions/{id}/summary` | GET | Get portfolio summary |
+| `/api/sessions/{id}/end` | PATCH | End a trading session |
 
 ### Positions
 
@@ -235,10 +244,10 @@ crypto_config = MarketConfig(
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/signals` | GET | List pending signals |
-| `/api/signals` | POST | Create new signal |
-| `/api/signals/{id}/approve` | POST | Approve and execute signal |
-| `/api/signals/{id}/reject` | POST | Reject signal |
+| `/api/signals?session_id={id}` | GET | List signals for a session |
+| `/api/signals?session_id={id}` | POST | Create new signal (body: symbol, market, signal_type, entry_price, stop_loss, take_profit, confidence, strategy) |
+| `/api/signals/{id}` | GET | Get signal details |
+| `/api/signals/{id}/action` | POST | Approve or reject signal (body: `{"action": "approve"}` or `{"action": "reject"}`)
 
 ### Markets
 
@@ -251,9 +260,8 @@ crypto_config = MarketConfig(
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/performance/{session_id}` | GET | Get performance metrics |
-| `/api/performance/{session_id}/equity` | GET | Get equity curve data |
-| `/api/performance/{session_id}/drawdown` | GET | Get drawdown history |
+| `/api/performance/metrics?session_id={id}` | GET | Get performance metrics |
+| `/api/performance/daily?session_id={id}` | GET | Get daily performance snapshots |
 
 ### Alerts
 
@@ -419,10 +427,10 @@ app.add_middleware(
 
 ```bash
 # Run all paper trading tests
-python -m pytest tests/test_paper_trading.py tests/test_exit_manager.py -v
+python -m pytest tests/paper_trading/ -v
 
 # Run with coverage
-python -m pytest tests/ --cov=paper_trading --cov-report=html
+python -m pytest tests/paper_trading/ --cov=paper_trading --cov-report=html
 ```
 
 ## License

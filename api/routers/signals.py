@@ -7,6 +7,9 @@ from sqlalchemy.orm import Session
 from api.dependencies import get_db
 from api.schemas import SignalResponse, SignalAction, SignalCreate
 from paper_trading.models import PendingSignal, PaperSession
+from paper_trading.executor import PaperExecutor
+from paper_trading.position_manager import PositionManager
+from paper_trading.config import PaperTradingConfig
 
 router = APIRouter(prefix="/api/signals", tags=["signals"])
 
@@ -82,9 +85,52 @@ def signal_action(
         raise HTTPException(status_code=400, detail=f"Signal already {signal.status}")
 
     if action_data.action == "approve":
-        signal.status = "executed"
-        signal.reviewed_at = datetime.now()
-        # TODO: Create position via paper executor
+        # Get session to calculate position size
+        session = db.query(PaperSession).filter(PaperSession.id == signal.session_id).first()
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+
+        # Initialize config, position manager, and executor
+        config = PaperTradingConfig()
+        position_manager = PositionManager(config)
+        executor = PaperExecutor(config, db)
+
+        # Calculate position size
+        signal_dict = {
+            "symbol": signal.symbol,
+            "market": signal.market,
+            "direction": signal.signal_type,
+            "entry_price": signal.entry_price,
+            "stop_loss": signal.stop_loss,
+            "take_profit": signal.take_profit,
+            "confidence": signal.confidence,
+            "strategy": signal.strategy,
+        }
+
+        try:
+            quantity = position_manager.calculate_position_size(
+                portfolio_value=session.current_balance,
+                entry_price=signal.entry_price,
+                stop_loss=signal.stop_loss,
+                market=signal.market,
+            )
+
+            if quantity <= 0:
+                raise HTTPException(status_code=400, detail="Calculated position size is zero")
+
+            # Create position via executor
+            executor.open_position(
+                session_id=signal.session_id,
+                signal=signal_dict,
+                quantity=quantity,
+            )
+
+            signal.status = "executed"
+            signal.reviewed_at = datetime.now()
+
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
     elif action_data.action == "reject":
         signal.status = "rejected"
         signal.reviewed_at = datetime.now()
